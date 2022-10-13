@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+
+# generate documentation unless nodoc requested
+ifeq (,$(filter nodoc,$(DEB_BUILD_OPTIONS)))
+DOCS = README.html README.txt
+endif
+
+ESLINT = eslint
+MOCHA = mocha --no-timeout
+# normalize output with TAP where possible unless terse requested
+ifeq (,$(filter terse,$(DEB_BUILD_OPTIONS)))
+ESLINT += --format tap
+MOCHA += --reporter tap
+else
+ESLINT += --format unix
+MOCHA += --reporter dot --no-colors
+endif
+
+override_dh_auto_build: $(DOCS)
+	rollup --no-esModule --config
+
+# TODO: check ith mocha when node module esm is in Debian
+override_dh_auto_test:
+	$(ESLINT) src test
+#	$(MOCHA)
+
+override_dh_installdocs:
+	dh_installdocs --all -- $(DOCS)
+
+override_dh_clean:
+	dh_clean -- $(DOCS)
+
+%.html: %.md
+	pandoc --from gfm-raw_html --to html --standalone --output $@ $<
+
+%.txt: %.md
+	pandoc --from gfm-raw_html --to plain --output $@ $<
+
+%:
+	dh $@

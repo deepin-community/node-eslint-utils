@@ -1,0 +1,6 @@
+  * package browser-targeted code when needed node module is in Debian:
+    esm
+  * package documentation when needed node module is in Debian:
+    vuepress
+  * check more of testsuite when needed node modules are in Debian:
+    esm nyc

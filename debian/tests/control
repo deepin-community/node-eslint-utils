@@ -1,0 +1,5 @@
+Test-Command: node -e "require('eslint-utils');"
+Depends:
+ node-eslint-utils,
+ nodejs,
+Restrictions: superficial

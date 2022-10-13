@@ -1,0 +1,44 @@
+node-eslint-utils (2.1.0-3) unstable; urgency=medium
+
+  * fix have autopkgtest depend on nodejs
+  * break older nodejs (not depend on recent nodejs)
+
+ -- Jonas Smedegaard <dr@jones.dk>  Mon, 28 Dec 2020 14:25:07 +0100
+
+node-eslint-utils (2.1.0-2) unstable; urgency=medium
+
+  * add patch 2002
+    to use older version of Nodejs module @mysticatea/eslint-plugin
+  * fix tighten to (build-)depend on recent nodejs;
+    fix build-depend on node-dot-prop node-mysticatea-eslint-plugin
+
+ -- Jonas Smedegaard <dr@jones.dk>  Thu, 17 Dec 2020 05:02:49 +0100
+
+node-eslint-utils (2.1.0-1) unstable; urgency=medium
+
+  [ upstream ]
+  * new release
+
+  [ Jonas Smedegaard ]
+  * declare compliance with Debian Policy 4.5.1
+  * support DEB_BUILD_OPTIONS=terse
+  * drop patch 2002 to avoid Nodejs module rollup-plugin-sourcemaps;
+    (build-)depend on node-rollup-plugin-sourcemaps
+  * improve lint-check;
+    build-depend on node-mysticatea-eslint-plugin
+  * use debhelper compatibility level 13 (not 12)
+
+ -- Jonas Smedegaard <dr@jones.dk>  Mon, 14 Dec 2020 12:37:31 +0100
+
+node-eslint-utils (2.0.0-2) unstable; urgency=medium
+
+  * release targeted unstable
+
+ -- Jonas Smedegaard <dr@jones.dk>  Mon, 20 Apr 2020 00:36:41 +0200
+
+node-eslint-utils (2.0.0-1) experimental; urgency=low
+
+  * initial release;
+    closes: Bug#958122
+
+ -- Jonas Smedegaard <dr@jones.dk>  Sat, 18 Apr 2020 22:01:47 +0200
