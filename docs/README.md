@@ -19,13 +19,13 @@ npm install eslint-utils
 ```
 
 ::: tip Requirements
-`eslint-utils` requires Node.js `6.5.0` or newer versions.
+`eslint-utils` requires Node.js `10` or newer versions.
 :::
 
 ## 📖 Usage
 
 ```js
-const utils = require("eslint-utils")
+const utils = require("eslint-utils");
 
 // use it to define rules...
 ```

@@ -5,7 +5,9 @@ import { CALL, CONSTRUCT, ESM, READ, ReferenceTracker } from "../src/"
 
 const config = {
     parserOptions: {
-        ecmaVersion: semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ecmaVersion: semver.gte(eslint.Linter.version, "7.0.0")
+            ? 2022
+            : semver.gte(eslint.Linter.version, "6.0.0")
             ? 2020
             : 2018,
         sourceType: "module",
@@ -499,25 +501,42 @@ describe("The 'ReferenceTracker' class:", () => {
                 },
                 expected: [],
             },
+            ...(semver.gte(eslint.Linter.version, "7.0.0")
+                ? [
+                      {
+                          description:
+                              "should not mix up public and private identifiers.",
+                          code: [
+                              "class C { #value; wrap() { var value = MyObj.#value; } }",
+                          ].join("\n"),
+                          traceMap: {
+                              MyObj: {
+                                  value: { [READ]: 1 },
+                              },
+                          },
+                          expected: [],
+                      },
+                  ]
+                : []),
         ]) {
             it(description, () => {
                 const linter = new eslint.Linter()
 
                 let actual = null
-                linter.defineRule("test", context => ({
+                linter.defineRule("test", (context) => ({
                     "Program:exit"() {
                         const tracker = new ReferenceTracker(context.getScope())
                         actual = Array.from(
-                            tracker.iterateGlobalReferences(traceMap)
-                        ).map(x =>
+                            tracker.iterateGlobalReferences(traceMap),
+                        ).map((x) =>
                             Object.assign(x, {
-                                node: Object.assign(
-                                    { type: x.node.type },
-                                    x.node.optional
+                                node: {
+                                    type: x.node.type,
+                                    ...(x.node.optional
                                         ? { optional: x.node.optional }
-                                        : {}
-                                ),
-                            })
+                                        : {}),
+                                },
+                            }),
                         )
                     },
                 }))
@@ -539,7 +558,7 @@ describe("The 'ReferenceTracker' class:", () => {
                     "abc();",
                     "new abc();",
                     "abc.xyz;",
-                    ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+                    ...(semver.gte(eslint.Linter.version, "6.0.0")
                         ? [
                               "abc?.xyz;",
                               "abc?.();",
@@ -583,7 +602,7 @@ describe("The 'ReferenceTracker' class:", () => {
                         type: READ,
                         info: 4,
                     },
-                    ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+                    ...(semver.gte(eslint.Linter.version, "6.0.0")
                         ? [
                               {
                                   node: {
@@ -676,20 +695,20 @@ describe("The 'ReferenceTracker' class:", () => {
                 const linter = new eslint.Linter()
 
                 let actual = null
-                linter.defineRule("test", context => ({
+                linter.defineRule("test", (context) => ({
                     "Program:exit"() {
                         const tracker = new ReferenceTracker(context.getScope())
                         actual = Array.from(
-                            tracker.iterateCjsReferences(traceMap)
-                        ).map(x =>
+                            tracker.iterateCjsReferences(traceMap),
+                        ).map((x) =>
                             Object.assign(x, {
-                                node: Object.assign(
-                                    { type: x.node.type },
-                                    x.node.optional
+                                node: {
+                                    type: x.node.type,
+                                    ...(x.node.optional
                                         ? { optional: x.node.optional }
-                                        : {}
-                                ),
-                            })
+                                        : {}),
+                                },
+                            }),
                         )
                     },
                 }))
@@ -958,20 +977,20 @@ describe("The 'ReferenceTracker' class:", () => {
                 const linter = new eslint.Linter()
 
                 let actual = null
-                linter.defineRule("test", context => ({
+                linter.defineRule("test", (context) => ({
                     "Program:exit"() {
                         const tracker = new ReferenceTracker(context.getScope())
                         actual = Array.from(
-                            tracker.iterateEsmReferences(traceMap)
-                        ).map(x =>
+                            tracker.iterateEsmReferences(traceMap),
+                        ).map((x) =>
                             Object.assign(x, {
-                                node: Object.assign(
-                                    { type: x.node.type },
-                                    x.node.optional
+                                node: {
+                                    type: x.node.type,
+                                    ...(x.node.optional
                                         ? { optional: x.node.optional }
-                                        : {}
-                                ),
-                            })
+                                        : {}),
+                                },
+                            }),
                         )
                     },
                 }))

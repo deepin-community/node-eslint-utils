@@ -1,4 +1,4 @@
-/* globals BigInt, globalThis, global, self, window */
+/* globals globalThis, global, self, window */
 
 import { findVariable } from "./find-variable"
 
@@ -61,7 +61,7 @@ const builtinNames = Object.freeze(
         "unescape",
         "WeakMap",
         "WeakSet",
-    ])
+    ]),
 )
 const callAllowed = new Set(
     [
@@ -79,8 +79,8 @@ const callAllowed = new Set(
         isNaN,
         isPrototypeOf,
         ...Object.getOwnPropertyNames(Math)
-            .map(k => Math[k])
-            .filter(f => typeof f === "function"),
+            .map((k) => Math[k])
+            .filter((f) => typeof f === "function"),
         Number,
         Number.isFinite,
         Number.isNaN,
@@ -101,11 +101,10 @@ const callAllowed = new Set(
         String.fromCharCode,
         String.fromCodePoint,
         String.raw,
-        Symbol,
         Symbol.for,
         Symbol.keyFor,
         unescape,
-    ].filter(f => typeof f === "function")
+    ].filter((f) => typeof f === "function"),
 )
 const callPassThrough = new Set([
     Object.freeze,
@@ -250,6 +249,9 @@ const operations = Object.freeze({
 
         if (args != null) {
             if (calleeNode.type === "MemberExpression") {
+                if (calleeNode.property.type === "PrivateIdentifier") {
+                    return null
+                }
                 const object = getStaticValueR(calleeNode.object, initialScope)
                 if (object != null) {
                     if (
@@ -258,9 +260,10 @@ const operations = Object.freeze({
                     ) {
                         return { value: undefined, optional: true }
                     }
-                    const property = calleeNode.computed
-                        ? getStaticValueR(calleeNode.property, initialScope)
-                        : { value: calleeNode.property.name }
+                    const property = getStaticPropertyNameValue(
+                        calleeNode,
+                        initialScope,
+                    )
 
                     if (property != null) {
                         const receiver = object.value
@@ -367,14 +370,15 @@ const operations = Object.freeze({
     },
 
     MemberExpression(node, initialScope) {
+        if (node.property.type === "PrivateIdentifier") {
+            return null
+        }
         const object = getStaticValueR(node.object, initialScope)
         if (object != null) {
             if (object.value == null && (object.optional || node.optional)) {
                 return { value: undefined, optional: true }
             }
-            const property = node.computed
-                ? getStaticValueR(node.property, initialScope)
-                : { value: node.property.name }
+            const property = getStaticPropertyNameValue(node, initialScope)
 
             if (property != null && !isGetter(object.value, property.value)) {
                 return { value: object.value[property.value] }
@@ -413,9 +417,10 @@ const operations = Object.freeze({
                 if (propertyNode.kind !== "init") {
                     return null
                 }
-                const key = propertyNode.computed
-                    ? getStaticValueR(propertyNode.key, initialScope)
-                    : { value: propertyNode.key.name }
+                const key = getStaticPropertyNameValue(
+                    propertyNode,
+                    initialScope,
+                )
                 const value = getStaticValueR(propertyNode.value, initialScope)
                 if (key == null || value == null) {
                     return null
@@ -427,7 +432,7 @@ const operations = Object.freeze({
             ) {
                 const argument = getStaticValueR(
                     propertyNode.argument,
-                    initialScope
+                    initialScope,
                 )
                 if (argument == null) {
                     return null
@@ -450,13 +455,13 @@ const operations = Object.freeze({
         const tag = getStaticValueR(node.tag, initialScope)
         const expressions = getElementValues(
             node.quasi.expressions,
-            initialScope
+            initialScope,
         )
 
         if (tag != null && expressions != null) {
             const func = tag.value
-            const strings = node.quasi.quasis.map(q => q.value.cooked)
-            strings.raw = node.quasi.quasis.map(q => q.value.raw)
+            const strings = node.quasi.quasis.map((q) => q.value.cooked)
+            strings.raw = node.quasi.quasis.map((q) => q.value.raw)
 
             if (func === String.raw) {
                 return { value: func(strings, ...expressions) }
@@ -520,6 +525,33 @@ function getStaticValueR(node, initialScope) {
     if (node != null && Object.hasOwnProperty.call(operations, node.type)) {
         return operations[node.type](node, initialScope)
     }
+    return null
+}
+
+/**
+ * Get the static value of property name from a MemberExpression node or a Property node.
+ * @param {Node} node The node to get.
+ * @param {Scope} [initialScope] The scope to start finding variable. Optional. If the node is a computed property node and this scope was given, this checks the computed property name by the `getStringIfConstant` function with the scope, and returns the value of it.
+ * @returns {{value:any}|{value:undefined,optional?:true}|null} The static value of the property name of the node, or `null`.
+ */
+function getStaticPropertyNameValue(node, initialScope) {
+    const nameNode = node.type === "Property" ? node.key : node.property
+
+    if (node.computed) {
+        return getStaticValueR(nameNode, initialScope)
+    }
+
+    if (nameNode.type === "Identifier") {
+        return { value: nameNode.name }
+    }
+
+    if (nameNode.type === "Literal") {
+        if (nameNode.bigint) {
+            return { value: nameNode.bigint }
+        }
+        return { value: String(nameNode.value) }
+    }
+
     return null
 }
 

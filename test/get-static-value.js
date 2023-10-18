@@ -74,6 +74,10 @@ describe("The 'getStaticValue' function", () => {
             expected: { value: Symbol.iterator },
         },
         { code: "Symbol[iterator]", expected: null },
+        {
+            code: "const symbol = Symbol(); (symbol === symbol)",
+            expected: null,
+        },
         { code: "Object.freeze", expected: { value: Object.freeze } },
         { code: "Object.xxx", expected: { value: undefined } },
         { code: "new Array(2)", expected: null },
@@ -126,25 +130,22 @@ const aMap = Object.freeze({
             expected: null,
         },
         {
-            code:
-                '({}.constructor.constructor("return process.env.npm_name")())',
+            code: '({}.constructor.constructor("return process.env.npm_name")())',
             expected: null,
         },
         {
-            code:
-                'JSON.stringify({a:1}, new {}.constructor.constructor("console.log(\\"code injected\\"); process.exit(1)"), 2)',
+            code: 'JSON.stringify({a:1}, new {}.constructor.constructor("console.log(\\"code injected\\"); process.exit(1)"), 2)',
             expected: null,
         },
         {
-            code:
-                'Object.create(null, {a:{get:new {}.constructor.constructor("console.log(\\"code injected\\"); process.exit(1)")}}).a',
+            code: 'Object.create(null, {a:{get:new {}.constructor.constructor("console.log(\\"code injected\\"); process.exit(1)")}}).a',
             expected: null,
         },
         {
             code: "RegExp.$1",
             expected: null,
         },
-        ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ...(semver.gte(eslint.Linter.version, "6.0.0")
             ? [
                   {
                       code: "const a = null, b = 42; a ?? b",
@@ -238,6 +239,52 @@ const aMap = Object.freeze({
                       code: "a?.()",
                       expected: null,
                   },
+                  {
+                      code: "({'a': 1, 1e+1: 2, 2n: 3})",
+                      expected: { value: { a: 1, 10: 2, 2: 3 } },
+                  },
+              ]
+            : []),
+        ...(semver.gte(eslint.Linter.version, "7.0.0")
+            ? [
+                  {
+                      code: `class A {
+                          #x = 0;
+                          fn () {
+                              const foo = {x:42}
+                              foo.#x // not 42
+                          }
+                      }`,
+                      expected: null,
+                  },
+                  {
+                      code: `class A {
+                          #x = 0;
+                          fn () {
+                              const foo = {x:42}
+                              foo.x // 42
+                          }
+                      }`,
+                      expected: { value: 42 },
+                  },
+                  {
+                      code: `class A {
+                          #parseInt;
+                          fn () {
+                              Number.#parseInt('42') // not 42
+                          }
+                      }`,
+                      expected: null,
+                  },
+                  {
+                      code: `class A {
+                          #parseInt;
+                          fn () {
+                              Number.parseInt('42') // 42
+                          }
+                      }`,
+                      expected: { value: 42 },
+                  },
               ]
             : []),
     ]) {
@@ -245,24 +292,31 @@ const aMap = Object.freeze({
             const linter = new eslint.Linter()
 
             let actual = null
-            linter.defineRule("test", context => ({
+            linter.defineRule("test", (context) => ({
                 ExpressionStatement(node) {
                     actual = getStaticValue(
                         node,
-                        noScope ? null : context.getScope()
+                        noScope ? null : context.getScope(),
                     )
                 },
             }))
-            linter.verify(code, {
+            const messages = linter.verify(code, {
                 env: { es6: true },
                 parserOptions: {
-                    ecmaVersion: semver.gte(eslint.CLIEngine.version, "6.0.0")
+                    ecmaVersion: semver.gte(eslint.Linter.version, "7.0.0")
+                        ? 2022
+                        : semver.gte(eslint.Linter.version, "6.0.0")
                         ? 2020
                         : 2018,
                 },
                 rules: { test: "error" },
             })
 
+            assert.strictEqual(
+                messages.length,
+                0,
+                messages[0] && messages[0].message,
+            )
             if (actual == null) {
                 assert.strictEqual(actual, expected)
             } else {
