@@ -16,12 +16,19 @@ ESLINT += --format unix
 MOCHA += --reporter dot --no-colors
 endif
 
+override_dh_clean:
+	dh_clean -- $(DOCS)
+
 override_dh_auto_build: $(DOCS)
 	rollup --no-esModule --config
 
-# TODO: check ith mocha when node module esm is in Debian
+# TODO: lint-check src/get-static-value.js
+# TODO: lint-check docs/.vuepress/config.js
+# TODO: check with mocha when node module esm is in Debian
+#       and then also apply patch in bug#1006359
 override_dh_auto_test:
-	$(ESLINT) src test
+	$(ESLINT) --ignore-pattern src/get-static-value.js src test
+#	$(ESLINT) docs/.vuepress/config.js src test rollup.config.js
 #	$(MOCHA)
 
 override_dh_installdocs:
@@ -31,10 +38,10 @@ override_dh_clean:
 	dh_clean -- $(DOCS)
 
 %.html: %.md
-	pandoc --from gfm-raw_html --to html --standalone --output $@ $<
+	cmark-gfm $< > $@
 
 %.txt: %.md
-	pandoc --from gfm-raw_html --to plain --output $@ $<
+	cmark-gfm --to plaintext $< > $@
 
 %:
 	dh $@

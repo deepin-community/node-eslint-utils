@@ -1,5 +1,14 @@
-Test-Command: node -e "require('eslint-utils');"
+Test-Command: cd / && node -e "require('eslint-utils');"
 Depends:
  node-eslint-utils,
  nodejs,
 Restrictions: superficial
+Features: test-name=require
+
+#Test-Command:
+# sed -i -e 's,"\.\./src/","eslint-utils",' test/*.js
+# && mocha --reporter tap 'tests/lib/**/*.js'
+#Depends:
+# mocha,
+# node-eslint-utils,
+# node-esm,

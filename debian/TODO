@@ -4,3 +4,4 @@
     vuepress
   * check more of testsuite when needed node modules are in Debian:
     esm nyc
+    + enabling mocha tests also requires patch from bug#1006359

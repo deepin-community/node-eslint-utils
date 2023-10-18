@@ -47,7 +47,7 @@ describe("The 'hasSideEffect' function", () => {
             options: undefined,
             expected: true,
         },
-        ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ...(semver.gte(eslint.Linter.version, "6.0.0")
             ? [
                   {
                       code: "f?.()",
@@ -61,7 +61,7 @@ describe("The 'hasSideEffect' function", () => {
             options: undefined,
             expected: true,
         },
-        ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ...(semver.gte(eslint.Linter.version, "6.0.0")
             ? [
                   {
                       code: "a + f?.()",
@@ -80,7 +80,7 @@ describe("The 'hasSideEffect' function", () => {
             options: { considerGetters: true },
             expected: true,
         },
-        ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ...(semver.gte(eslint.Linter.version, "6.0.0")
             ? [
                   {
                       code: "obj?.a",
@@ -109,7 +109,7 @@ describe("The 'hasSideEffect' function", () => {
             options: { considerImplicitTypeConversion: true },
             expected: true,
         },
-        ...(semver.gte(eslint.CLIEngine.version, "6.0.0")
+        ...(semver.gte(eslint.Linter.version, "6.0.0")
             ? [
                   {
                       code: "obj?.[a]",
@@ -168,6 +168,45 @@ describe("The 'hasSideEffect' function", () => {
             options: { considerImplicitTypeConversion: true },
             expected: false,
         },
+        ...(semver.gte(eslint.Linter.version, "7.0.0")
+            ? [
+                  {
+                      code: "(class { x })",
+                      options: undefined,
+                      expected: false,
+                  },
+                  {
+                      code: "(class { x = a++ })",
+                      options: undefined,
+                      expected: true,
+                  },
+                  {
+                      code: "(class { x = 42 })",
+                      options: { considerImplicitTypeConversion: true },
+                      expected: false,
+                  },
+                  {
+                      code: "(class { [x] = 42 })",
+                      options: undefined,
+                      expected: false,
+                  },
+                  {
+                      code: "(class { [x] = 42 })",
+                      options: { considerImplicitTypeConversion: true },
+                      expected: true,
+                  },
+                  {
+                      code: "(class { [0] = 42 })",
+                      options: { considerImplicitTypeConversion: true },
+                      expected: false,
+                  },
+                  {
+                      code: "(class { ['x'] = 42 })",
+                      options: { considerImplicitTypeConversion: true },
+                      expected: false,
+                  },
+              ]
+            : []),
         {
             code: "new C()",
             options: undefined,
@@ -278,24 +317,26 @@ describe("The 'hasSideEffect' function", () => {
         },
     ]) {
         it(`should return ${expected} on the code \`${code}\` and the options \`${JSON.stringify(
-            options
+            options,
         )}\``, () => {
             const linter = new eslint.Linter()
 
             let actual = null
-            linter.defineRule("test", context => ({
+            linter.defineRule("test", (context) => ({
                 Program(node) {
                     actual = hasSideEffect(
                         dp.get(node, key),
                         context.getSourceCode(),
-                        options
+                        options,
                     )
                 },
             }))
             const messages = linter.verify(code, {
                 env: { es6: true },
                 parserOptions: {
-                    ecmaVersion: semver.gte(eslint.CLIEngine.version, "6.0.0")
+                    ecmaVersion: semver.gte(eslint.Linter.version, "7.0.0")
+                        ? 2022
+                        : semver.gte(eslint.Linter.version, "6.0.0")
                         ? 2020
                         : 2018,
                 },
@@ -305,7 +346,7 @@ describe("The 'hasSideEffect' function", () => {
             assert.strictEqual(
                 messages.length,
                 0,
-                messages[0] && messages[0].message
+                messages[0] && messages[0].message,
             )
             assert.strictEqual(actual, expected)
         })

@@ -1,3 +1,60 @@
+node-eslint-utils (3.0.0-3) unstable; urgency=medium
+
+  * Team upload
+
+  [ Debian Janitor ]
+  * Apply multi-arch hints. + node-eslint-utils: Add Multi-Arch: foreign.
+
+  [ Yadd ]
+  * Update standards version to 4.6.1, no changes needed.
+  * Add fix for rollup 3 (Closes: #1022688)
+
+ -- Yadd <yadd@debian.org>  Fri, 28 Oct 2022 12:23:39 +0200
+
+node-eslint-utils (3.0.0-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ lintian-brush ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse
+
+  [ Yadd ]
+  * Fix autopkgtest
+
+ -- Yadd <yadd@debian.org>  Wed, 02 Mar 2022 10:51:19 +0100
+
+node-eslint-utils (3.0.0-1) unstable; urgency=medium
+
+  [ upstream ]
+  * new release
+
+  [ Jonas Smedegaard ]
+  * generate documentation with cmark-gfm (not pandoc);
+    fix clean generated documentation;
+    build-depend on cmark-gfm (not pandoc)
+  * tighten build-dependency on node-mysticatea-eslint-plugin;
+    drop patch 2002 to use older mysicatea plugin;
+    stop explicitly stop breaking older nodejs;
+    closes: bug#1006078, thanks to Lucas Nussbaum
+  * stop build-depend on nodejs: not used explicitly during build
+  * update test coverage
+  * update git-buildpackage config:
+    + use DEP-14 branch names debian/latest upstream/latest
+      (not debian/master upstream)
+    + add usage comment
+  * update copyright info:
+    + use Reference field (not License-Reference);
+      tighten lintian overrides
+    + update coverage
+    + stop repackage upstream source:
+       no generated files needing exclusion
+  * simplify source helper script copyright-check
+  * declare compliance with Debian Policy 4.6.0
+  * drop unused source helper tool tap-todo
+
+ -- Jonas Smedegaard <dr@jones.dk>  Fri, 25 Feb 2022 18:03:13 +0100
+
 node-eslint-utils (2.1.0-3) unstable; urgency=medium
 
   * fix have autopkgtest depend on nodejs

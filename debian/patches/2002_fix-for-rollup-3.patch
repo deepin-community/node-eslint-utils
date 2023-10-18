@@ -1,0 +1,25 @@
+Description: fix for rollup 3
+Author: Yadd <yadd@debian.org>
+Bug-Debian: https://bugs.debian.org/1022688
+Forwarded: not-needed
+Last-Update: 2022-10-28
+
+--- a/rollup.config.js
++++ b/rollup.config.js
+@@ -2,8 +2,8 @@
+  * @author Toru Nagashima
+  * See LICENSE file in root directory for full license.
+  */
+-import sourcemaps from "rollup-plugin-sourcemaps"
+-import packageInfo from "./package.json"
++const sourcemaps = require("rollup-plugin-sourcemaps")
++const packageInfo = require("./package.json")
+ 
+ /**
+  * Define the output configuration.
+@@ -25,4 +25,4 @@
+     }
+ }
+ 
+-export default [config(".js"), config(".mjs")]
++module.exports = [config(".js"), config(".mjs")]

@@ -20,7 +20,7 @@ const typeConversionBinaryOps = Object.freeze(
         "^",
         "&",
         "in",
-    ])
+    ]),
 )
 const typeConversionUnaryOps = Object.freeze(new Set(["-", "+", "!", "~"]))
 
@@ -135,6 +135,16 @@ const visitor = Object.freeze(
             }
             return this.$visitChildren(node, options, visitorKeys)
         },
+        PropertyDefinition(node, options, visitorKeys) {
+            if (
+                options.considerImplicitTypeConversion &&
+                node.computed &&
+                node.key.type !== "Literal"
+            ) {
+                return true
+            }
+            return this.$visitChildren(node, options, visitorKeys)
+        },
         UnaryExpression(node, options, visitorKeys) {
             if (node.operator === "delete") {
                 return true
@@ -154,7 +164,7 @@ const visitor = Object.freeze(
         YieldExpression() {
             return true
         },
-    })
+    }),
 )
 
 /**
@@ -170,11 +180,11 @@ const visitor = Object.freeze(
 export function hasSideEffect(
     node,
     sourceCode,
-    { considerGetters = false, considerImplicitTypeConversion = false } = {}
+    { considerGetters = false, considerImplicitTypeConversion = false } = {},
 ) {
     return visitor.$visit(
         node,
         { considerGetters, considerImplicitTypeConversion },
-        sourceCode.visitorKeys || evk.KEYS
+        sourceCode.visitorKeys || evk.KEYS,
     )
 }
